@@ -64,6 +64,9 @@ bool extprefix;
 
 bool resized = false;
 
+int *selects; /* 0 if file is unselected */
+int selnext; /* Only incremements by 1. */
+
 typedef struct {
 	int err;
 	char *cmd;
@@ -323,6 +326,8 @@ void load_image(int new)
 
 bool mark_image(int n, bool on)
 {
+	selects[n] = on ? selnext++ : 0;
+
 	markidx = n;
 	if (!!(files[n].flags & FF_MARK) != on) {
 		files[n].flags ^= FF_MARK;
@@ -853,6 +858,9 @@ int main(int argc, char **argv)
 	files = emalloc(filecnt * sizeof(*files));
 	memset(files, 0, filecnt * sizeof(*files));
 	fileidx = 0;
+
+	selects = emalloc(filecnt * sizeof(int));
+	selnext = 1;
 
 	if (options->from_stdin) {
 		n = 0;

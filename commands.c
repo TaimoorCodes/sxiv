@@ -52,14 +52,37 @@ extern int markidx;
 extern int prefix;
 extern bool extprefix;
 
+extern int *selects;
+
+/* Bad place for this method? */
+int cmp_outf_t(const void *p, const void *q) {
+    outf_t a = *(const outf_t *) p;
+    outf_t b = *(const outf_t *) q;
+
+    if (a.order < b.order)
+        return -1;
+    else if (a.order > b.order)
+        return 1;
+    return 0;
+}
+
 bool cg_quit(arg_t _)
 {
 	unsigned int i;
 
 	if (options->to_stdout && markcnt > 0) {
+		outf_t *outfs;
+		outfs = emalloc(filecnt * sizeof(outf_t));
 		for (i = 0; i < filecnt; i++) {
-			if (files[i].flags & FF_MARK)
-				printf("%s\n", files[i].name);
+			outfs[i].path = files[i].path;
+			outfs[i].order = selects[i];
+		}
+
+		/* Sort selections in order */
+		qsort(outfs, filecnt, sizeof *outfs, &cmp_outf_t);
+		for (i = 0; i < filecnt; i++) {
+			if (outfs[i].order != 0)
+				printf("%s\n", outfs[i].path);
 		}
 	}
 	exit(EXIT_SUCCESS);
